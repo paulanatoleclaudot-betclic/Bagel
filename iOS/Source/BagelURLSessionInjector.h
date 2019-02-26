@@ -29,6 +29,8 @@
 
 - (void)urlSessionInjector:(BagelURLSessionInjector*)injector didReceiveResponse:(NSURLSessionDataTask*)dataTask response:(NSURLResponse*)response;
 
+- (void)urlSessionInjector:(BagelURLSessionInjector*)injector didReceiveRedirect:(NSURLSessionDataTask*)dataTask request:(NSURLRequest*)request response:(NSURLResponse*)response;
+
 - (void)urlSessionInjector:(BagelURLSessionInjector*)injector didReceiveData:(NSURLSessionDataTask*)dataTask data:(NSData*)data;
 
 - (void)urlSessionInjector:(BagelURLSessionInjector*)injector didFinishWithError:(NSURLSessionDataTask*)dataTask error:(NSError*)error;

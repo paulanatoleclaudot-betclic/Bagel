@@ -76,6 +76,7 @@
     if (sessionClass) {
         [self swizzleSessionDidReceiveData:sessionClass];
         [self swizzleSessionDidReceiveResponse:sessionClass];
+        [self swizzleSessiondDidRedirectResponse:sessionClass];
         [self swizzleSessiondDidFinishWithError:sessionClass];
     }
 
@@ -150,6 +151,29 @@
         };
 
         method_setImplementation(m, imp_implementationWithBlock(swizzledSessionDidReceiveData));
+    }
+}
+
+- (void)swizzleSessiondDidRedirectResponse : (Class) class
+{
+    SEL selector = NSSelectorFromString(@"_redirectRequest:redirectResponse:completion:");
+    Method m = class_getInstanceMethod(class, selector);
+
+    if (m && [class instancesRespondToSelector:selector]) {
+
+        typedef void (*OriginalIMPBlockType)(id self, SEL _cmd, id arg1, id arg2, id arg3);
+        OriginalIMPBlockType originalIMPBlock = (OriginalIMPBlockType)method_getImplementation(m);
+
+        __weak BagelURLSessionInjector* weakSelf = self;
+
+        void (^swizzledSessiondDidRedirectResponse)(id, id, id, id) = ^void(id self, id arg1, id arg2, id arg3) {
+
+            [weakSelf.delegate urlSessionInjector:weakSelf didReceiveRedirect:[self valueForKey:@"task"] request:arg1 response:arg2];
+
+            originalIMPBlock(self, _cmd, arg1, arg2, arg3);
+        };
+
+        method_setImplementation(m, imp_implementationWithBlock(swizzledSessiondDidRedirectResponse));
     }
 }
 

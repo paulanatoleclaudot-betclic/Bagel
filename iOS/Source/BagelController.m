@@ -112,6 +112,16 @@ static NSString* queueId = @"com.yagiz.bagel.injectController";
     }];
 }
 
+-(void)urlSessionInjector:(BagelURLSessionInjector*)injector
+       didReceiveRedirect:(NSURLSessionDataTask*)dataTask
+                  request:(NSURLRequest*)request
+                 response:(NSURLResponse*)response
+{
+    [self performBlock:^{
+        NSLog(@"request: %@ %@ %@", response, dataTask, request);
+    }];
+}
+
 - (void)urlSessionInjector:(BagelURLSessionInjector*)injector
             didReceiveData:(NSURLSessionDataTask*)dataTask
                       data:(NSData*)data
