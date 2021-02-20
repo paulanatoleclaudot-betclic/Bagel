@@ -3,6 +3,6 @@ jobs:
   include:
     - stage: test
       name: Swift PM
-      osx_image: xcode12.4
+      osx_image: xcode12.3
       script:
         - swift package clean; swift build
