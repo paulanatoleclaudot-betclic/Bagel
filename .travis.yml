@@ -1,0 +1,8 @@
+language: swift
+jobs:  
+  include:
+    - stage: test
+      name: Swift PM
+      osx_image: xcode12.4
+      script:
+        - swift package clean; swift build
