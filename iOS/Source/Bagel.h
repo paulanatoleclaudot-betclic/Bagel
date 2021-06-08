@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-@import Foundation;
+#import <UIKit/UIKit.h>
 
 //! Project version number for Bagel.
 FOUNDATION_EXPORT double BagelVersionNumber;
@@ -27,12 +27,14 @@ FOUNDATION_EXPORT double BagelVersionNumber;
 //! Project version string for Bagel.
 FOUNDATION_EXPORT const unsigned char BagelVersionString[];
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 
+#import "BagelBaseModel.h"
 #import "BagelCarrierDelegate.h"
 #import "BagelConfiguration.h"
 #import "BagelDeviceModel.h"
 #import "BagelProjectModel.h"
+#import "BagelUtility.h"
 
 @interface Bagel : NSObject
 

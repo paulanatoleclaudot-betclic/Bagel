@@ -20,13 +20,6 @@
 // THE SOFTWARE.
 
 #import "BagelRequestPacket.h"
-#import "BagelBaseModel.h"
-
-@interface BagelProjectModel()<BagelBaseModelProtocol>
-@end
-
-@interface BagelDeviceModel()<BagelBaseModelProtocol>
-@end
 
 @implementation BagelRequestPacket
 
