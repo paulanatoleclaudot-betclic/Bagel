@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import CocoaAsyncSocket
+import Starscream
 
 protocol BagelPublisherDelegate {
     
@@ -18,57 +18,36 @@ class BagelPublisher: NSObject {
 
     var delegate: BagelPublisherDelegate?
     
-    var mainSocket: GCDAsyncSocket!
-    var sockets: [GCDAsyncSocket] = []
+    var mainSocketServer: WebSocketServer?
     var netService: NetService!
     
     func startPublishing() {
-        
-        self.sockets = []
-        
-        self.mainSocket = GCDAsyncSocket(delegate: self, delegateQueue: DispatchQueue.global(qos: .background))
+        self.mainSocketServer = WebSocketServer()
+        _ = mainSocketServer?.start(address: "http://127.0.0.1", port: UInt16(BagelConfiguration.netServicePort))
 
-        do {
-            
-            try self.mainSocket.accept(onPort: UInt16(BagelConfiguration.netServicePort))
-            
-            self.sockets.append(self.mainSocket)
-            
-            self.netService = NetService(domain: BagelConfiguration.netServiceDomain, type: BagelConfiguration.netServiceType, name: BagelConfiguration.netServiceName, port: BagelConfiguration.netServicePort)
-            self.netService.delegate = self
-            self.netService.publish()
-            
-        } catch {
-            
-            self.tryPublishAgain()
+        mainSocketServer?.onEvent = { [weak self] event in
+            switch event {
+            case let .binary(_, d):
+                self?.parseBody(data: d)
+            default:
+                print(event)
+            }
         }
-        
-    }
-
-    
-    func lengthOf(data: Data) -> Int {
-        
-        var length = 0
-        memcpy(&length, ([UInt8](data)), MemoryLayout<UInt64>.stride)
-
-        return length
+        self.netService = NetService(domain: BagelConfiguration.netServiceDomain, type: BagelConfiguration.netServiceType, name: BagelConfiguration.netServiceName, port: BagelConfiguration.netServicePort)
+        self.netService.delegate = self
+        self.netService.publish()
     }
     
     func parseBody(data: Data) {
         
         let jsonDecoder = JSONDecoder()
         jsonDecoder.dateDecodingStrategy = .secondsSince1970
-        
         do {
-            
             let bagelPacket = try jsonDecoder.decode(BagelPacket.self, from: data)
-            
             DispatchQueue.main.async {
                 self.delegate?.didGetPacket(publisher: self, packet: bagelPacket)
             }
-            
         } catch {
-            
             print(error)
         }
     }
@@ -76,65 +55,20 @@ class BagelPublisher: NSObject {
 
 
 extension BagelPublisher: NetServiceDelegate {
-    
     func netServiceDidPublish(_ sender: NetService) {
-        
         print("publish", sender)
     }
     
     func netService(_ sender: NetService, didNotPublish errorDict: [String : NSNumber]) {
-        
         print("error", errorDict)
     }
-
 }
 
 
-extension BagelPublisher: GCDAsyncSocketDelegate {
-    
-    func socket(_ sock: GCDAsyncSocket, didAcceptNewSocket newSocket: GCDAsyncSocket) {
-        
-        self.sockets.append(newSocket)
-        newSocket.delegate = self
-        newSocket.readData(toLength: UInt(MemoryLayout<UInt64>.stride), withTimeout: -1.0, tag: 0)
-    }
-    
-    func socket(_ sock: GCDAsyncSocket, didRead data: Data, withTag tag: Int) {
-        
-        if tag == 0 {
-            
-            let length = self.lengthOf(data: data)
-            sock.readData(toLength: UInt(length), withTimeout: -1.0, tag: 1)
-            
-        } else if tag == 1 {
-            
-            self.parseBody(data: data)
-            sock.readData(toLength: UInt(MemoryLayout<UInt64>.stride), withTimeout: -1.0, tag: 0)
-        }
-    }
-    
-    func socketDidDisconnect(_ sock: GCDAsyncSocket, withError err: Error?) {
-        
-        if self.sockets.contains(sock) {
-            
-            sock.delegate = nil
-            
-            self.sockets = Array(self.sockets.filter { $0 !== sock })
-            
-            if self.sockets.count == 0 {
-                
-                self.tryPublishAgain()
-                
-            }
-        }
-    }
-    
+extension BagelPublisher {
     func tryPublishAgain() {
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            
             self.startPublishing()
-            
         }
         
     }
