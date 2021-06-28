@@ -98,8 +98,11 @@ class BagelBrowser: NSObject, NetServiceDelegate, NetServiceBrowserDelegate, Web
     }
 
     public func sendPacket(packet: BagelRequestPacket) {
-        if let jsonData = try? JSONEncoder().encode(packet) {
+        do {
+            let jsonData = try JSONEncoder().encode(packet)
             sockets.forEach { $0.write(data: jsonData, completion: nil) }
+        } catch {
+            print(error)
         }
     }
 }

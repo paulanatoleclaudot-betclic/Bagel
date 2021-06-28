@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import UIKit
 
 extension NSObject {
     class func swizzleClassMethod(originClass: AnyClass?, originSelector: Selector, newClass: AnyClass?, newSelector: Selector) -> Void

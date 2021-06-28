@@ -105,6 +105,12 @@ extension BagelURLProtocol: URLSessionDataDelegate {
         }
 
         if error != nil {
+            if model.response == nil {
+                if let url = request.url {
+                    let response = HTTPURLResponse(url: url, statusCode: 520, httpVersion: nil, headerFields: nil)
+                    model.response = response
+                }
+            }
             model.endWithError()
         } else if let response = response {
             let data = (responseData ?? NSMutableData()) as Data
